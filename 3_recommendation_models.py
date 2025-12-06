@@ -71,7 +71,7 @@ from sklearn.decomposition import TruncatedSVD
 
 # 1. CHUẨN BỊ DỮ LIỆU
 print("Đang xử lý dữ liệu Rating...")
-ratings = pd.read_csv('ml-latest-small/ratings.csv')
+ratings = pd.read_csv('ratings.csv')
 
 # Tạo Ma trận User-Item (Hàng là User, Cột là Phim, Giá trị là điểm rating)
 # Fillna(0) nghĩa là chưa xem thì coi như 0 điểm

@@ -17,7 +17,9 @@ def load_data():
     movies['overview'] = movies['overview'].fillna('')
 
     # Đọc dữ liệu rating
-    ratings = pd.read_csv('ml-latest-small/ratings.csv')
+    # Sửa đường dẫn nếu bạn để file ratings.csv ở ngoài cùng thư mục với app.py
+    # Nếu vẫn để trong folder ml-latest-small thì sửa lại là 'ml-latest-small/ratings.csv'
+    ratings = pd.read_csv('ratings.csv')
     return movies, ratings
 
 
@@ -54,7 +56,7 @@ def get_content_recs(title, movies, cosine_sim):
     idx = movies.index[movies['title'] == title].tolist()[0]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:6]  # Lấy 5 phim
+    sim_scores = sim_scores[1:11]  # Lấy 10 phim (bỏ phim đầu tiên là chính nó)
     movie_indices = [i[0] for i in sim_scores]
     return movies.iloc[movie_indices]
 
@@ -69,7 +71,7 @@ def get_collab_recs(title, movies, user_movie_matrix, corr_mat):
     result = pd.DataFrame({'corr_score': corr_specific})
     result['movieId'] = user_movie_matrix.columns
     result = pd.merge(result, movies, on='movieId')
-    result = result.sort_values('corr_score', ascending=False).head(6).iloc[1:]
+    result = result.sort_values('corr_score', ascending=False).head(11).iloc[1:]  # Lấy 10 phim
     return result
 
 
@@ -101,7 +103,6 @@ if selected_movie:
         st.write(f"**Thể loại:** {movie_info['genres']}")
         st.write(f"**Đánh giá:** ⭐ {movie_info['vote_average']}/10")
         st.write(f"**Nội dung:** {movie_info['overview']}")
-
     st.markdown("---")
 
     # Hiển thị 2 luồng gợi ý
@@ -114,13 +115,21 @@ if selected_movie:
         st.caption("Các phim có cốt truyện tương tự.")
         results = get_content_recs(selected_movie, movies, cosine_sim)
 
-        cols = st.columns(5)
-        for i, row in enumerate(results.iterrows()):
-            with cols[i]:
-                movie = row[1]
-                st.write(f"**{movie['title']}**")
-                if pd.notna(movie['poster_path']):
-                    st.image(f"https://image.tmdb.org/t/p/w200{movie['poster_path']}")
+        if len(results) > 0:
+            # Chia lưới: Cứ 5 phim thì xuống dòng tạo hàng mới
+            for i, row in enumerate(results.iterrows()):
+                # Nếu là phim thứ 0, 5, 10... thì tạo 5 cột mới (tức là xuống dòng)
+                if i % 5 == 0:
+                    cols = st.columns(5)
+
+                # Hiển thị phim vào cột tương ứng
+                with cols[i % 5]:
+                    movie = row[1]
+                    st.write(f"**{movie['title']}**")
+                    if pd.notna(movie['poster_path']):
+                        st.image(f"https://image.tmdb.org/t/p/w200{movie['poster_path']}")
+        else:
+            st.write("Không tìm thấy phim phù hợp.")
 
     # TAB 2: COLLABORATIVE FILTERING
     with tab2:
@@ -128,12 +137,20 @@ if selected_movie:
         results_collab = get_collab_recs(selected_movie, movies, user_movie_matrix, corr_mat)
 
         if results_collab is not None:
-            cols = st.columns(5)
-            for i, row in enumerate(results_collab.iterrows()):
-                with cols[i]:
-                    movie = row[1]
-                    st.write(f"**{movie['title']}**")
-                    if pd.notna(movie['poster_path']):
-                        st.image(f"https://image.tmdb.org/t/p/w200{movie['poster_path']}")
+            if len(results_collab) > 0:
+                # Chia lưới: Cứ 5 phim thì xuống dòng tạo hàng mới
+                for i, row in enumerate(results_collab.iterrows()):
+                    # Nếu là phim thứ 0, 5, 10... thì tạo 5 cột mới (tức là xuống dòng)
+                    if i % 5 == 0:
+                        cols = st.columns(5)
+
+                    # Hiển thị phim vào cột tương ứng
+                    with cols[i % 5]:
+                        movie = row[1]
+                        st.write(f"**{movie['title']}**")
+                        if pd.notna(movie['poster_path']):
+                            st.image(f"https://image.tmdb.org/t/p/w200{movie['poster_path']}")
+            else:
+                st.write("Không tìm thấy phim phù hợp.")
         else:
             st.warning("Phim này chưa có đủ dữ liệu rating để gợi ý theo cộng đồng.")

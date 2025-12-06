@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # 1. LOAD DỮ LIỆU
 movies = pd.read_csv('movies_final_dataset.csv')
-ratings = pd.read_csv('ml-latest-small/ratings.csv') # File gốc từ MovieLens
+ratings = pd.read_csv('ratings.csv') # File gốc từ MovieLens
 
 print(f"Số lượng phim ban đầu: {len(movies)}")
 
